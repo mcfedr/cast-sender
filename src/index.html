@@ -44,8 +44,8 @@
         <div class="input-group">
           <span class="input-group-btn">
             <button class="btn btn-default" ng-click="doTogglePlay()">
-              <span class="icon icon-play" ng-if="!play.playing"></span>
-              <span class="icon icon-pause" ng-if="play.playing"></span>
+              <span class="glyphicon glyphicon-play" ng-if="!play.playing"></span>
+              <span class="glyphicon glyphicon-pause" ng-if="play.playing"></span>
             </button>
           </span>
           <input type="range" class="form-control" ng-model="play.currentTime" max="{{ play.length }}" ng-change="doSeek()">

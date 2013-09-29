@@ -19,7 +19,7 @@ var express = require("express"),
                 }));
             });
         })
-        .use(express.static(__dirname + '/sender'))
+        .use(express.static(__dirname + '/src'))
         .use('/bower_components', express.static(__dirname + '/bower_components'))
 
         .listen(port, function() {
