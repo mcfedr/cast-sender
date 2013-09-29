@@ -1,0 +1,8 @@
+CACHE MANIFEST
+# rev will automatically be updated, dont touch
+# rev 0
+NETWORK:
+*
+CACHE:
+# --files-- will automatically be replaced with the list of files to cache
+#--files--

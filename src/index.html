@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html data-cast-api-enabled="true">
+  <head>
+    <link rel="stylesheet" href="/bower_components/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/bower_components/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="index.css">
+  </head>
+  <body ng-controller="CastC">
+    <nav class="navbar navbar-default navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">Cast</a>
+        </div>
+        <div class="collapse navbar-collapse navbar-ex1-collapse">
+          <ul class="nav navbar-nav">
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown">Receivers <b class="caret"></b></a>
+              <ul class="dropdown-menu">
+                <li ng-repeat="receiver in receivers">
+                  <a href="#" ng-click="doToggleReceiver(receiver)">
+                    <span ng-if="receiver.active === true" class="icon icon-ok"></span>
+                    <span ng-if="receiver.active === 'loading'" class="icon icon-refresh icon-spin"></span>
+                    <span ng-if="receiver.active === 'error'" class="icon icon-warning-sign"></span>
+                    {{receiver.receiver.name}}
+                  </a>
+                </li>
+                <li ng-if="!castApi">
+                  Loading Receivers <span class="icon icon-refresh icon-spin"></span>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <main class="container">
+      <div class="cast-player">
+        <video ng-show="localReceiver.active" id="localVideo"></video>
+        <div class="input-group">
+          <span class="input-group-btn">
+            <button class="btn btn-default" ng-click="doTogglePlay()">
+              <span class="icon icon-play" ng-if="!play.playing"></span>
+              <span class="icon icon-pause" ng-if="play.playing"></span>
+            </button>
+          </span>
+          <input type="range" class="form-control" ng-model="play.currentTime" max="{{ play.length }}" ng-change="doSeek()">
+        </div>
+      </div>
+      <div>
+        <h1>Videos <span ng-click="doLoadVideos()" class="pull-right icon icon-refresh" ng-class="{'icon-spin': videosLoading}"></span></h1>
+        <div class="list-group">
+          <a href="#" class="list-group-item" ng-class="{active: video.active}" ng-repeat="video in videos" ng-click="doChooseVideo(video)">
+            {{video.name}}
+          </a>
+        </div>
+      </div>
+    </main>
+    <script src="/bower_components/jquery/jquery.min.js"></script>
+    <script src="/bower_components/angular/angular.min.js"></script>
+    <script src="/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="index.js"></script>
+  </body>
+</html>

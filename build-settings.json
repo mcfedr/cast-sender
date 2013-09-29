@@ -1,0 +1,32 @@
+{
+	"name": "cast-sender",
+	"port": 5000,
+    "debug": true,
+	"helpers": {
+		"almond": true,
+        "cordova": false,
+		"less": true,
+		"hogan": false,
+		"icons": false,
+		"index": true,
+		"manifest": true,
+		"require": true,
+		"text": false
+	},
+	"folders": {
+		"source": "src",
+		"sources": {
+			"css": "css",
+			"images": "img",
+			"js": "js",
+			"less": "less"
+		},
+		"build": "build",
+		"modules": {
+			"webapp": "."
+		}
+	},
+    "empty": [""],
+    "platforms": [""],
+    "notify": true
+}
