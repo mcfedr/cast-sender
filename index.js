@@ -253,7 +253,7 @@ var tasks = {
 					data = data.replace('src="bower_components\/requirejs\/require.js"', 'src="js/main.js"');
 				}
 				if(project.helpers.manifest) {
-					data = data.replace('<html>', '<html manifest="cache.manifest">');
+					data = data.replace('<html data-cast-api-enabled="true">', '<html data-cast-api-enabled="true" manifest="cache.manifest">');
 				}
 				if(project.helpers.icons) {
 					data = data.replace('<link href="'+project.folders.sources.images+'/icon.png" rel="apple-touch-icon">',

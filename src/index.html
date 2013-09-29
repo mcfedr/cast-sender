@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html data-cast-api-enabled="true">
   <head>
-    <link rel="stylesheet" href="/bower_components/font-awesome/css/font-awesome.min.css">
-    <link rel="stylesheet" href="/bower_components/bootstrap/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="index.css">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <link rel="stylesheet" type="text/css" media="all" href="css/main.css">
   </head>
-  <body ng-controller="CastC">
+  <body ng-controller="cast.main">
     <nav class="navbar navbar-default navbar-fixed-top">
       <div class="container">
         <div class="navbar-header">
@@ -61,9 +60,6 @@
         </div>
       </div>
     </main>
-    <script src="/bower_components/jquery/jquery.min.js"></script>
-    <script src="/bower_components/angular/angular.min.js"></script>
-    <script src="/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-    <script src="index.js"></script>
+    <script data-main="js/main" src="bower_components/requirejs/require.js"></script>
   </body>
 </html>
