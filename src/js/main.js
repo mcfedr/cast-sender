@@ -26,12 +26,21 @@ require([
     'angular',
     'controllers/main',
     'angularAnimate',
-    'bootstrap'
+    'bootstrap',
+    'cache'
 ], function(angular, mainC) {
     var $html = angular.element(document.getElementsByTagName('html')[0]),
         app = angular.module('cast', [
-            'ngAnimate'
-        ]).controller('cast.main', mainC);
+                'ngAnimate'
+            ])
+            .controller('cast.main', mainC)
+            .filter('mins', [function() {
+                return function(text) {
+                    var mins = Math.floor(text / 60),
+                        secs = Math.floor(text % 60);
+                    return mins + ':' + secs;
+                };
+            }]);
 
     angular.element().ready(function() {
         $html.addClass('ng-app');

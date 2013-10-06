@@ -56,6 +56,10 @@ var tasks = {
 			if(project.helpers.icons) {
 				auto.icons = ['assets', tasks.helpers.icons];
 			}
+            if(project.helpers.bootstrap) {
+                auto.bootstrap = tasks.helpers.bootstrap;
+                auto.assets.unshift('bootstrap');
+            }
 			if(project.helpers.manifest) {
 				auto.manifest = ['mkdirs', 'js', 'html', 'css', 'assets'];
 				if(project.helpers.icons) {
@@ -147,7 +151,8 @@ var tasks = {
 			
 			watchr.watch({
 				paths: [
-	                source('images')
+	                source('images'),
+                    source('fonts')
 	            ],
 				listener: listener('assets')
 			});
@@ -179,8 +184,12 @@ var tasks = {
 			startMsg('assets');
 			function assetSeries(asset) {
 				return function(cb) {
-					var buildDir = build('webapp', asset);
+					var buildDir = build('webapp', asset),
+                        sourceDir = source(asset);
 					async.series([
+                        function(cb) {
+                            fse.mkdirs(sourceDir, cb);
+                        },
 						function(cb) {
 							fse.remove(buildDir, cb);
 						},
@@ -188,14 +197,15 @@ var tasks = {
 							fse.mkdirs(buildDir, cb);
 						},
 						function(cb) {
-							fse.copy(source(asset), buildDir, cb);
+							fse.copy(sourceDir, buildDir, cb);
 						}
 					], cb);
 				};
 			}
 		
 			async.parallel([
-				assetSeries('images')
+				assetSeries('images'),
+                assetSeries('fonts')
 			], function(err) {
 				if (err) {
 					cb(err);
@@ -205,6 +215,24 @@ var tasks = {
 				cb();
 			});
 		},
+        bootstrap: function(cb) {
+            startMsg('bootstrap');
+            async.series([
+                function(cb) {
+                    fse.mkdirs(source('fonts'), cb);
+                },
+                function(cb) {
+                    fse.copy(path.join(source(), 'bower_components', 'bootstrap', 'fonts'), source('fonts'), cb);
+                }
+            ], function(err) {
+                if(err) {
+                    cb(err);
+                    return;
+                }
+                doneMsg('bootstrap');
+                cb();
+            });
+        },
 		cordova: function(cb) {
 			startMsg('cordova');
 			async.each(project.platforms, function(platform, cb) {

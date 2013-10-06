@@ -11,7 +11,8 @@
 		"index": true,
 		"manifest": true,
 		"require": true,
-		"text": false
+		"text": false,
+        "bootstrap": true
 	},
 	"folders": {
 		"source": "src",
@@ -19,7 +20,8 @@
 			"css": "css",
 			"images": "img",
 			"js": "js",
-			"less": "less"
+			"less": "less",
+            "fonts": "fonts"
 		},
 		"build": "build",
 		"modules": {
