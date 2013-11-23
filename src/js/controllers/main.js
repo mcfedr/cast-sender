@@ -83,6 +83,7 @@ define(['jquery'], function($) {
             else {
                 if(receiver.type == 'local') {
                     $scope.localReceiver.loaded = false;
+                    $localVideo[0].src = '';
                 }
                 else if(receiver.type == 'remote') {
                     if(receiver.activity) {
