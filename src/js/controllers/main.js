@@ -1,7 +1,6 @@
 define(['jquery'], function($) {
     return ['$scope', '$http', function($scope, $http) {
         var CAST_APP_ID = "938337b2-f581-41c4-b2c4-73e9cbe9e7ea",
-            FEDR_NAMESPACE = 'cast.fedr.co',
             $localVideo = $('#localVideo');
 
         $scope.localReceiver = {
@@ -97,10 +96,11 @@ define(['jquery'], function($) {
         $scope.doChooseVideo = function(video) {
             $scope.currentVideo = video;
             $scope.play.currentTime = 0;
-            $scope.play.playing = true;
+            $scope.play.playing = false;
             $scope.receivers.forEach(function(receiver) {
                 if(receiver.active) {
                     playVideo(receiver);
+                    $scope.play.playing = true;
                 }
             });
         };
@@ -157,6 +157,9 @@ define(['jquery'], function($) {
                         receiver.activity = activity;
                         receiver.active = true;
                         $scope.castApi.addMediaStatusListener(activity.activityId, remoteMediaStatus);
+                        if($scope.currentVideo) {
+                            loadRemoteVideo(receiver);
+                        }
                     }
                     else if (activity.status == "error") {
                         remoteError(receiver, activity);
@@ -206,7 +209,6 @@ define(['jquery'], function($) {
         }
         
         function remoteMediaStatus(status) {
-            console.log(status);
             $scope.$apply(function() {
                 $scope.play.length = status.duration;
                 $scope.play.currentTime = status.position;
@@ -249,8 +251,11 @@ define(['jquery'], function($) {
                             receiver.activity.activityId,
                             new cast.MediaVolumeRequest($scope.play.volume / 100, false),
                             function(result) {
-                                //
-                            });
+                                // if(!result.success) {
+                                //     remoteError(receiver, result);
+                                // }
+                            }
+                        );
                     }
                 }
             });

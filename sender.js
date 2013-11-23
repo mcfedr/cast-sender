@@ -38,8 +38,9 @@ var express = require("express"),
                 }));
             });
         })
-        .use(express.static(__dirname + '/src'))
-        .use('/bower_components', express.static(__dirname + '/bower_components'))
+//        .use(express.static(__dirname + '/src'))
+//        .use('/bower_components', express.static(__dirname + '/bower_components'))
+        .use(express.static(__dirname + '/build'))
         .listen(port, function() {
             console.log("Listening on " + port);
         });
