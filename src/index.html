@@ -36,8 +36,10 @@
     <main class="container">
       <div class="cast-player">
         <h1>{{ currentVideo.name }}</h1>
-        <video ng-show="localReceiver.active" id="localVideo"></video>
-        <div class="input-group">
+        <div class="video-wrapper" ng-show="localReceiver.active">
+            <video id="localVideo"></video>
+        </div>
+        <div class="input-group" ng-class="{'video-active': localReceiver.active}">
           <span class="input-group-btn">
             <button class="btn btn-default" ng-click="doTogglePlay()">
               <span class="glyphicon glyphicon-play" ng-if="!play.playing"></span>
@@ -49,6 +51,11 @@
           <span class="input-group-addon">
 			  {{ play.currentTime | mins }} / {{ play.length | mins }}
 		  </span>
+          <span class="input-group-btn" ng-if="localReceiver.active">
+            <button class="btn btn-default" ng-click="doToggleFullscreen()">
+                <span class="glyphicon glyphicon-fullscreen"></span>
+            </button>
+          </span>
         </div>
       </div>
       <div>

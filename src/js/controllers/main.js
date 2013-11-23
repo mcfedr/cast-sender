@@ -281,5 +281,19 @@ define(['jquery'], function($) {
                 });
             }
         });
+
+        $scope.doToggleFullscreen = function() {
+            if($scope.localReceiver.active) {
+                if ($localVideo[0].requestFullscreen) {
+                    $localVideo[0].requestFullscreen();
+                }
+                else if ($localVideo[0].mozRequestFullScreen) {
+                    $localVideo[0].mozRequestFullScreen();
+                }
+                else if ($localVideo[0].webkitRequestFullscreen) {
+                    $localVideo[0].webkitRequestFullscreen();
+                }
+            }
+        };
     }];
 });
