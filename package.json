@@ -10,6 +10,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Fred Cox <mcfedr@gmail.com>",
+  "license": "MIT",
   "dependencies": {
     "connect": "~2.9.0",
     "imagemagick": "~0.1.3",
@@ -25,6 +26,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/mcfedr/cast-sender.git"
+    "url": "git://github.com/mcfedr/cast-sender.git"
   }
 }
