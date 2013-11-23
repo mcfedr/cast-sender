@@ -59,7 +59,7 @@
       <div>
         <h1>Videos <span ng-click="doLoadVideos()" class="pull-right glyphicon glyphicon-refresh" ng-class="{'icon-spin': videosLoading}"></span></h1>
         <div class="list-group">
-          <a href="#" class="list-group-item" ng-class="{active: video.active}" ng-repeat="video in videos" ng-click="doChooseVideo(video)">
+          <a href="#" class="list-group-item" ng-class="{active: currentVideo == video}" ng-repeat="video in videos" ng-click="doChooseVideo(video)">
             {{video.name}}
           </a>
         </div>
