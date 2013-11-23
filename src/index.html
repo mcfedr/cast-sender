@@ -18,22 +18,17 @@
         </div>
         <div class="collapse navbar-collapse navbar-ex1-collapse">
           <ul class="nav navbar-nav">
-            <li class="dropdown">
-              <a href="#" class="dropdown-toggle" data-toggle="dropdown">Receivers <b class="caret"></b></a>
-              <ul class="dropdown-menu">
-                <li ng-repeat="receiver in receivers">
+              <li ng-repeat="receiver in receivers">
                   <a href="#" ng-click="doToggleReceiver(receiver)">
-                    <span ng-if="receiver.active === true" class="glyphicon glyphicon-ok"></span>
-                    <span ng-if="receiver.active === 'loading'" class="glyphicon glyphicon-refresh icon-spin"></span>
-                    <span ng-if="receiver.active === 'error'" class="glyphicon glyphicon-warning-sign"></span>
-                    {{receiver.receiver.name}}
+                      <span ng-if="receiver.active === true" class="glyphicon glyphicon-ok"></span>
+                      <span ng-if="receiver.active === 'loading'" class="glyphicon glyphicon-refresh icon-spin"></span>
+                      <span ng-if="receiver.active === 'error'" class="glyphicon glyphicon-warning-sign"></span>
+                      {{receiver.receiver.name}}
                   </a>
-                </li>
-                <li ng-if="!castApi">
-                  Loading Receivers <span class="glyphicon glyphicon-refresh icon-spin"></span>
-                </li>
-              </ul>
-            </li>
+              </li>
+              <li ng-if="!castApi">
+                  <p class="navbar-text">Loading Receivers <span class="glyphicon glyphicon-refresh icon-spin"></span></p>
+              </li>
           </ul>
         </div>
       </div>
