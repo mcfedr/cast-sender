@@ -140,13 +140,22 @@ define(['jquery', 'cast'], function($, cast) {
 
             media.addUpdateListener(function onMediaStatusUpdate(status) {
                 console.log('status', status, media.playerState);
-                $scope.$apply(function() {
-                    $scope.play.currentTime = media.currentTime;
-                    $scope.play.volume = media.volume.level * 100;
-                    $scope.play.muted = media.volume.muted;
-                    $scope.play.playing = media.playerState == cast.media.PlayerState.PLAYING || media.playerState == cast.media.PlayerState.BUFFERING;
-                    $scope.play.buffering = media.playerState == cast.media.PlayerState.BUFFERING;
-                })
+                if(status) {
+                    $scope.$apply(function() {
+                        $scope.play.currentTime = media.currentTime;
+                        $scope.play.volume = media.volume.level * 100;
+                        $scope.play.muted = media.volume.muted;
+                        $scope.play.playing = media.playerState == cast.media.PlayerState.PLAYING || media.playerState == cast.media.PlayerState.BUFFERING;
+                        $scope.play.buffering = media.playerState == cast.media.PlayerState.BUFFERING;
+                    });
+                }
+                else {
+                    session = currentMedia = null;
+                    $scope.$apply(function() {
+                        $scope.play.playing = false;
+                        $scope.play.remote = false;
+                    });
+                }
             });
 
             if($scope.play.playing) {
