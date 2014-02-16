@@ -1,5 +1,10 @@
 @import '../bower_components/bootstrap/less/bootstrap';
 
+//@castBlue: #1467fd;
+@controlsForeground: white;
+@controlsBackground: #2a2a2a;
+@controlsBorder: black;
+
 body {
   padding-top: 70px;
 }
@@ -11,10 +16,12 @@ body {
 
         border-top-left-radius: 4px;
         border-top-right-radius: 4px;
-        border: 1px solid #ccc;
+        border: 1px solid @controlsBorder;
         border-bottom: 0;
 
         display: block;
+
+        background: @controlsBackground;
 
         video {
             width: 100%;
@@ -26,6 +33,7 @@ body {
             display: block;
         }
     }
+
     h1 {
         overflow: hidden;
     }
@@ -38,7 +46,38 @@ body {
         border-top-right-radius: 0;
     }
 
-//    .input-group-btn:not(:first-child):not(:last-child) .btn.btn-default {
-//        border-radius: 0;
-//    }
+    .input-group {
+        .btn-default, .input-group-addon, input {
+            background: @controlsBackground;
+            color: @controlsForeground;
+            border-color: @controlsBorder;
+        }
+
+        input[type='range']::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            background-color: @controlsForeground;
+            width: 10px;
+            height: 26px;
+        }
+
+        .cast-off,
+        .cast-on,
+        .cast-pending {
+            display: block;
+            width: 22px;
+            height: 20px;
+            background-size: 100%;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-image: url("/img/cast_off.png");
+        }
+
+        .cast-on {
+            background-image: url("/img/cast_on.png");
+        }
+
+        .cast-pending {
+            background-image: url("/img/cast_on2.png");
+        }
+    }
 }

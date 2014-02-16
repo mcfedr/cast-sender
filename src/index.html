@@ -29,10 +29,13 @@
           <input type="range" class="form-control cast-position" ng-model="play.currentTime" max="{{ play.length }}" ng-change="doSeek()">
           <span class="input-group-addon">{{ play.currentTime | mins }} / {{ play.length | mins }}</span>
           <span class="input-group-btn">
+            <ul class="dropdown-menu pull-right">
+              <li><input type="range" class="form-control cast-volume" ng-model="play.volume" max="100" ng-change="doVolume()"></li>
+            </ul>
             <button class="btn btn-default" ng-click="doToggleCast()" ng-if="play.remoteAvailable">
-              <span class="glyphicon glyphicon-send" ng-if="!play.remote"></span>
-              <span class="glyphicon glyphicon-asterisk" ng-if="play.remote == 'pending'"></span>
-              <span class="glyphicon glyphicon-road" ng-if="play.remote === true"></span>
+              <span class="cast-off" ng-if="!play.remote"></span>
+              <span class="cast-pending" ng-if="play.remote == 'pending'"></span>
+              <span class="cast-on" ng-if="play.remote === true"></span>
             </button>
             <button class="btn btn-default" ng-click="doToggleFullscreen()" ng-if="!play.remote">
               <span class="glyphicon glyphicon-fullscreen"></span>
@@ -40,9 +43,6 @@
             <button class="btn btn-default dropdown-toggle" data-toggle="dropdown">
               <span class="glyphicon glyphicon-volume-up"></span>
             </button>
-                <ul class="dropdown-menu pull-right">
-                    <li><input type="range" class="form-control cast-volume" ng-model="play.volume" max="100" ng-change="doVolume()"></li>
-                </ul>
           </span>
         </div>
       </div>
