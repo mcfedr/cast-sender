@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html data-cast-api-enabled="true">
+<html>
   <head>
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <link rel="stylesheet" type="text/css" media="all" href="css/main.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" media="all" href="css/main.css">
+    <title>fedrcast</title>
   </head>
   <body ng-controller="cast.main">
     <nav class="navbar navbar-default navbar-fixed-top">
@@ -14,32 +15,17 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="#"><span class="glyphicon glyphicon-film"></span></a>
-        </div>
-        <div class="collapse navbar-collapse navbar-ex1-collapse">
-          <ul class="nav navbar-nav">
-              <li ng-repeat="receiver in receivers">
-                  <a href="#" ng-click="doToggleReceiver(receiver)">
-                      <span ng-if="receiver.active === true" class="glyphicon glyphicon-ok"></span>
-                      <span ng-if="receiver.active === 'loading'" class="glyphicon glyphicon-refresh icon-spin"></span>
-                      <span ng-if="receiver.active === 'error'" class="glyphicon glyphicon-warning-sign"></span>
-                      {{receiver.receiver.name}}
-                  </a>
-              </li>
-              <li ng-if="!castApi">
-                  <p class="navbar-text">Loading Receivers <span class="glyphicon glyphicon-refresh icon-spin"></span></p>
-              </li>
-          </ul>
+          <a class="navbar-brand" href="#"><span class="glyphicon glyphicon-film"></span> fedrcast</a>
         </div>
       </div>
     </nav>
     <main class="container">
       <div class="cast-player">
         <h1>{{ currentVideo.name }}</h1>
-        <div class="video-wrapper" ng-show="localReceiver.active">
-            <video id="localVideo"></video>
+        <div class="video-wrapper" ng-show="!play.remote">
+          <video id="localVideo"></video>
         </div>
-        <div class="input-group" ng-class="{'video-active': localReceiver.active}">
+        <div class="input-group" ng-class="{'video-active': !play.remote}">
           <span class="input-group-btn">
             <button class="btn btn-default" ng-click="doTogglePlay()">
               <span class="glyphicon glyphicon-play" ng-if="!play.playing"></span>
@@ -47,19 +33,27 @@
             </button>
           </span>
           <input type="range" class="form-control cast-position" ng-model="play.currentTime" max="{{ play.length }}" ng-change="doSeek()">
-          <input type="range" class="form-control cast-volume" ng-model="play.volume" max="100" ng-change="doVolume()">
-          <span class="input-group-addon">
-			  {{ play.currentTime | mins }} / {{ play.length | mins }}
-		  </span>
-          <span class="input-group-btn" ng-if="localReceiver.active">
-            <button class="btn btn-default" ng-click="doToggleFullscreen()">
-                <span class="glyphicon glyphicon-fullscreen"></span>
+          <span class="input-group-addon">{{ play.currentTime | mins }} / {{ play.length | mins }}</span>
+          <span class="input-group-btn">
+            <button class="btn btn-default" ng-click="doToggleCast()" ng-if="play.remoteAvailable">
+              <span class="glyphicon glyphicon-send" ng-if="!play.remote"></span>
+              <span class="glyphicon glyphicon-asterisk" ng-if="play.remote == 'pending'"></span>
+              <span class="glyphicon glyphicon-road" ng-if="play.remote === true"></span>
             </button>
+            <button class="btn btn-default" ng-click="doToggleFullscreen()" ng-if="!play.remote">
+              <span class="glyphicon glyphicon-fullscreen"></span>
+            </button>
+            <button class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+              <span class="glyphicon glyphicon-volume-up"></span>
+            </button>
+                <ul class="dropdown-menu pull-right">
+                    <li><input type="range" class="form-control cast-volume" ng-model="play.volume" max="100" ng-change="doVolume()"></li>
+                </ul>
           </span>
         </div>
       </div>
       <div>
-        <h1>Videos <span ng-click="doLoadVideos()" class="pull-right glyphicon glyphicon-refresh" ng-class="{'icon-spin': videosLoading}"></span></h1>
+        <h1>Videos <span ng-click="doLoadVideos()" class="pull-right glyphicon glyphicon-refresh"></span></h1>
         <div class="list-group">
           <a href="#" class="list-group-item" ng-class="{active: currentVideo == video}" ng-repeat="video in videos" ng-click="doChooseVideo(video)">
             {{video.name}}

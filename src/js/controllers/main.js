@@ -1,27 +1,22 @@
-define(['jquery'], function($) {
+define(['jquery', 'cast'], function($, cast) {
     return ['$scope', '$http', function($scope, $http) {
-        var CAST_APP_ID = "938337b2-f581-41c4-b2c4-73e9cbe9e7ea",
-            $localVideo = $('#localVideo');
+        var $localVideo = $('#localVideo'),
+            session,
+            currentMedia;
 
-        $scope.localReceiver = {
-            active: false,
-            loaded: false,
-            type: 'local',
-            receiver: {
-                name: 'Local'
-            }
-        };
-        $scope.receivers = [$scope.localReceiver];
-        $scope.videos = [{name: 'Bunny', src: 'http://video.webmfiles.org/big-buck-bunny_trailer.webm'}];
+        $scope.videos = [{name: 'Bunny', src: 'http://video.webmfiles.org/big-buck-bunny_trailer.webm', mime: 'video/webm'}];
+        $scope.videosLoading = false;
         $scope.play = {
             playing: false,
+            buffering: false,
             currentTime: 0,
             length: 0,
-            volume: 70
+            volume: 100,
+            muted: false,
+            remote: false,
+            remoteAvailable: false
         };
-
-        $scope.castApi = false;
-
+        $scope.currentVideo = null;
 
         $scope.doLoadVideos = function() {
             $scope.videosLoading = true;
@@ -36,233 +31,203 @@ define(['jquery'], function($) {
 
         $scope.doLoadVideos();
 
-        if (window.cast && cast.isAvailable) {
+        if (cast.isAvailable) {
             // Cast is known to be available
             initializeCast();
         }
         else {
-            // Wait for API to post a message to us
-            window.addEventListener("message", function(event) {
-                if (event.source == window && event.data &&
-                    event.data.source == "CastApi" &&
-                    event.data.event == "Hello") {
-                    initializeCast();
-                }
-            });
-        };
+            setTimeout(initializeCast, 1000);
+        }
 
         function initializeCast() {
-            $scope.castApi = new cast.Api();
-            $scope.castApi.addReceiverListener(CAST_APP_ID, function(list) {
+            var sessionRequest = new cast.SessionRequest(cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID);
+            var apiConfig = new cast.ApiConfig(sessionRequest, function sessionListener(s) {
+                console.log('session', s);
+                session = s;
+                if (session.media.length != 0) {
+                    onMediaDiscovered('onRequestSessionSuccess', session.media[0]);
+                }
                 $scope.$apply(function() {
-                    $scope.receivers = list.map(function(receiver) {
-                        return {
-                            active: false,
-                            type: 'remote',
-                            receiver: receiver
-                        };
-                    }).concat([$scope.localReceiver]);
+                    $scope.play.remote = true;
                 });
+            }, function receiverListener(e) {
+                console.log('receiver', e);
+                $scope.$apply(function() {
+                    $scope.play.remoteAvailable = e === 'available';
+                });
+            });
+            cast.initialize(apiConfig, function onInitSuccess(e) {
+                console.log('init', e);
+            }, function onInitError(e) {
+                console.log('init error', e);
             });
         }
 
-        $scope.doToggleReceiver = function(receiver) {
-            receiver.active = !receiver.active;
-
-            if(receiver.active) {
-                if(receiver.type == 'local') {
-                    if($scope.currentVideo) {
-                        playVideo(receiver);
+        $scope.doToggleCast = function() {
+            if ($scope.play.remote === true) {
+                $scope.play.remote = 'pending';
+                session.stop(function onSuccess(e) {
+                    console.log('stop', e);
+                    $localVideo[0].currentTime = $scope.play.currentTime;
+                    $localVideo[0].volume = $scope.play.volume / 100;
+                    if ($scope.play.playing) {
+                        $localVideo[0].play();
                     }
-                }
-                else if(receiver.type == 'remote') {
-                    loadRemote(receiver);
-                }
+                    $scope.play.remote = false;
+                }, function onError(e) {
+                    console.log('stop error', e);
+                    $scope.play.remote = true;
+                });
             }
-            else {
-                if(receiver.type == 'local') {
-                    $scope.localReceiver.loaded = false;
-                    $localVideo[0].src = '';
+            else if ($scope.play.remote === false) {
+                if ($scope.play.playing) {
+                    $localVideo[0].pause();
                 }
-                else if(receiver.type == 'remote') {
-                    if(receiver.activity) {
-                        $scope.castApi.stopActivity(receiver.activity.activityId);
+                $scope.play.remote = 'pending';
+                cast.requestSession(function onRequestSessionSuccess(s) {
+                    console.log('request session success', s);
+                    session = s;
+                    $scope.$apply(function() {
+                        $scope.play.remote = true;
+                    });
+                    if ($scope.currentVideo) {
+                        remoteLoadVideo($scope.currentVideo);
                     }
-                    receiver.loaded = false;
-                }
+                }, function onLaunchError(e) {
+                    console.log('launch error', e);
+                    $scope.$apply(function() {
+                        $scope.play.remote = false;
+                    });
+                });
             }
         };
-        
+
         $scope.doChooseVideo = function(video) {
             $scope.currentVideo = video;
             $scope.play.currentTime = 0;
-            $scope.play.playing = false;
-            $scope.receivers.forEach(function(receiver) {
-                if(receiver.active) {
-                    playVideo(receiver);
-                    $scope.play.playing = true;
+            $scope.play.playing = true;
+            $localVideo[0].src = video.src;
+            if($scope.play.remote === true) {
+                remoteLoadVideo(video);
+            }
+        };
+
+        function remoteLoadVideo(video) {
+            var media = new cast.media.MediaInfo(video.src, video.mime),
+                request = new cast.media.LoadRequest(media);
+            media.metadata = new cast.media.GenericMediaMetadata();
+            media.metadata.title = video.name;
+            session.loadMedia(request, onMediaDiscovered.bind(this, 'loadMedia'), function onMediaError(e) {
+                console.log('media error', e);
+            });
+        }
+
+        function onMediaDiscovered(how, media) {
+            console.log('media', media);
+            currentMedia = media;
+            $scope.$apply(function() {
+                $scope.play.length = media.media.duration;
+                if (!$scope.currentVideo) {
+                    $scope.videos.some(function(video) {
+                        if(video.src == media.media.contentId) {
+                            $scope.currentVideo = video;
+                            $localVideo[0].src = video.src;
+                            return true;
+                        }
+                    });
                 }
             });
-        };
+
+            media.addUpdateListener(function onMediaStatusUpdate(status) {
+                console.log('status', status, media.playerState);
+                $scope.$apply(function() {
+                    $scope.play.currentTime = media.currentTime;
+                    $scope.play.volume = media.volume.level * 100;
+                    $scope.play.muted = media.volume.muted;
+                    $scope.play.playing = media.playerState == cast.media.PlayerState.PLAYING || media.playerState == cast.media.PlayerState.BUFFERING;
+                    $scope.play.buffering = media.playerState == cast.media.PlayerState.BUFFERING;
+                })
+            });
+
+            if($scope.play.playing) {
+                var seekRequest = new cast.media.SeekRequest();
+                seekRequest.currentTime = $scope.play.currentTime;
+                seekRequest.resumeState = cast.media.ResumeState.PLAYBACK_START;
+                currentMedia.seek(seekRequest, function success(e) {
+                    console.log('seek', e);
+                }, function error(e) {
+                    console.log('seek error', e);
+                });
+            }
+        }
 
         $scope.doTogglePlay = function() {
             $scope.play.playing = !$scope.play.playing;
             
             if($scope.play.playing) {
-                $scope.receivers.forEach(function(receiver) {
-                    if(receiver.active) {
-                        if(receiver.type == 'local') {
-                            $localVideo[0].play();
-                        }
-                        else if(receiver.type == 'remote') {
-                            playRemoteVideo(receiver);
-                        }
+                if($scope.play.remote) {
+                    if (currentMedia) {
+                        currentMedia.play(null, function success(e) {
+                            console.log('play', e);
+                        }, function error(e) {
+                            console.log('play error', e);
+                        });
                     }
-                });
+                }
+                else {
+                    $localVideo[0].play();
+                }
             }
             else {
-                $scope.receivers.forEach(function(receiver) {
-                    if(receiver.active) {
-                        if(receiver.type == 'local') {
-                            $localVideo[0].pause();
-                        }
-                        else if(receiver.type == 'remote') {
-                            pauseRemoteVideo(receiver);
-                        }
+                if($scope.play.remote) {
+                    if (currentMedia) {
+                        currentMedia.pause(null, function success(e) {
+                            console.log('pause', e);
+                        }, function error(e) {
+                            console.log('pause error', e);
+                        });
                     }
-                });
+                }
+                else {
+                    $localVideo[0].pause();
+                }
             }
         };
 
-        function playVideo(receiver) {
-            if(receiver.type == 'local') {
-                receiver.loaded = false;
-                $localVideo[0].src = $scope.currentVideo.src;
-            }
-            else if(receiver.type == 'remote') {
-                if(receiver.activity) {
-                    loadRemoteVideo(receiver);
+        $scope.doSeek = function() {
+            if ($scope.play.remote) {
+                if (currentMedia) {
+                    var seekRequest = new cast.media.SeekRequest();
+                    seekRequest.currentTime = $scope.play.currentTime;
+                    currentMedia.seek(seekRequest, function success(e) {
+                        console.log('seek', e);
+                    }, function error(e) {
+                        console.log('seek error', e);
+                    });
                 }
-                else {
-                    loadRemote(receiver);
-                }
-            }
-        }
-        
-        function loadRemote(receiver) {
-            receiver.active = 'loading';
-            $scope.castApi.launch(new cast.LaunchRequest(CAST_APP_ID, receiver.receiver), function(activity) {
-                $scope.$apply(function() {
-                    if (activity.status == "running") {
-                        receiver.activity = activity;
-                        receiver.active = true;
-                        $scope.castApi.addMediaStatusListener(activity.activityId, remoteMediaStatus);
-                        if($scope.currentVideo) {
-                            loadRemoteVideo(receiver);
-                        }
-                    }
-                    else if (activity.status == "error") {
-                        remoteError(receiver, activity);
-                    }
-                });
-            });
-        }
-
-        function loadRemoteVideo(receiver) {
-            var request = new cast.MediaLoadRequest($scope.currentVideo.src);
-            request.title = $scope.currentVideo.name;
-            $scope.castApi.loadMedia(receiver.activity.activityId, request, function(result) {
-                if(result.success) {
-                    receiver.loaded = true;
-                    if($scope.play.playing) {
-                        playRemoteVideo(receiver);
-                    }
-                }
-                else {
-                    // remoteError(receiver, result);
-                }
-            });
-        }
-        
-        function playRemoteVideo(receiver) {
-            if(receiver.loaded) {
-                var request = new cast.MediaPlayRequest($scope.play.currentTime);
-                $scope.castApi.playMedia(receiver.activity.activityId, request, function(result) {
-                    // if(!result.success) {
-                    //     remoteError(receiver, result);
-                    // }
-                });
             }
             else {
-                loadRemoteVideo(receiver);
+                $localVideo[0].currentTime = $scope.play.currentTime;
             }
-        }
-        
-        function pauseRemoteVideo(receiver) {
-            if(receiver.loaded) {
-                $scope.castApi.pauseMedia(receiver.activity.activityId, function(result) {
-                    // if(!result.success) {
-                    //     remoteError(receiver, result);
-                    // }
-                });
-            }
-        }
-        
-        function remoteMediaStatus(status) {
-            $scope.$apply(function() {
-                $scope.play.length = status.duration;
-                $scope.play.currentTime = status.position;
-            });
-        }
-        
-        function remoteError(receiver, err) {
-            console.log(err);
-            $scope.$apply(function() {
-                if(receiver.activity) {
-                    $scope.castApi.stopActivity(receiver.activity.activityId, function() {});
-                }
-                receiver.activity = null;
-                receiver.active = 'error';
-                receiver.loaded = false;
-            });
-        }
-
-        $scope.doSeek = function() {
-            $scope.receivers.forEach(function(receiver) {
-                if(receiver.active  && receiver.loaded) {
-                    if(receiver.type == 'local') {
-                        $localVideo[0].currentTime = $scope.play.currentTime;
-                    }
-                    else if(receiver.type == 'remote') {
-                        playRemoteVideo(receiver);
-                    }
-                }
-            });
         };
 
         $scope.doVolume = function() {
-            $scope.receivers.forEach(function(receiver) {
-                if(receiver.active && receiver.loaded) {
-                    if(receiver.type == 'local') {
-                        $localVideo[0].volume = $scope.play.volume / 100;
-                    }
-                    else if(receiver.type == 'remote') {
-                        $scope.castApi.setMediaVolume(
-                            receiver.activity.activityId,
-                            new cast.MediaVolumeRequest($scope.play.volume / 100, false),
-                            function(result) {
-                                // if(!result.success) {
-                                //     remoteError(receiver, result);
-                                // }
-                            }
-                        );
-                    }
+            if ($scope.play.remote) {
+                if (currentMedia) {
+                    currentMedia.setVolume(new cast.media.VolumeRequest(new cast.Volume($scope.play.volume / 100)), function success(e) {
+                        console.log('volume', e);
+                    }, function error(e) {
+                        console.log('volume error', e);
+                    });
                 }
-            });
+            }
+            else {
+                $localVideo[0].volume = $scope.play.volume / 100;
+            }
         };
 
         $localVideo.on('timeupdate', function() {
-            if($scope.localReceiver.loaded) {
+            if (!$scope.play.remote) {
                 $scope.$apply(function() {
                     $scope.play.currentTime = $localVideo[0].currentTime;
                 });
@@ -270,11 +235,10 @@ define(['jquery'], function($) {
         });
 
         $localVideo.on('loadedmetadata', function() {
-            if($scope.localReceiver.active) {
+            if (!$scope.play.remote) {
                 $scope.$apply(function() {
                     $localVideo[0].currentTime = $scope.play.currentTime;
                     $scope.play.length = $localVideo[0].duration;
-                    $scope.localReceiver.loaded = true;
                     if($scope.play.playing) {
                         $localVideo[0].play();
                     }
@@ -283,7 +247,7 @@ define(['jquery'], function($) {
         });
 
         $scope.doToggleFullscreen = function() {
-            if($scope.localReceiver.active) {
+            if (!$scope.play.remote) {
                 if ($localVideo[0].requestFullscreen) {
                     $localVideo[0].requestFullscreen();
                 }

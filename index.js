@@ -222,7 +222,7 @@ var tasks = {
                     fse.mkdirs(source('fonts'), cb);
                 },
                 function(cb) {
-                    fse.copy(path.join(source(), 'bower_components', 'bootstrap', 'fonts'), source('fonts'), cb);
+                    fse.copy(path.join(source(), 'bower_components', 'bootstrap', 'dist', 'fonts'), source('fonts'), cb);
                 }
             ], function(err) {
                 if(err) {
@@ -467,7 +467,8 @@ var tasks = {
 					async.forEach([
 							build('webapp', 'images'),
 							build('webapp', 'css'),
-							build('webapp', 'js')
+							build('webapp', 'js'),
+                            build('webapp', 'fonts')
 						],
 						function(folder, cb) {
 							var c = 0,

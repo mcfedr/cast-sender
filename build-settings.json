@@ -3,7 +3,7 @@
 	"port": 5000,
     "debug": true,
 	"helpers": {
-		"almond": true,
+		"almond": false,
         "cordova": false,
 		"less": true,
 		"hogan": false,

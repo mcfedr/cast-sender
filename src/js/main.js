@@ -4,7 +4,8 @@ require.config({
         angularAnimate: '../bower_components/angular-animate/angular-animate',
         angularCache: '../bower_components/angular-cache/src/angular-cache',
         jquery: '../bower_components/jquery/jquery',
-        bootstrap: '../bower_components/bootstrap/dist/js/bootstrap'
+        bootstrap: '../bower_components/bootstrap/dist/js/bootstrap',
+        cast: 'https://www.gstatic.com/cv/js/sender/v1/cast_sender'
     },
     baseUrl: 'js',
     shim: {
@@ -14,7 +15,10 @@ require.config({
         },
         angularAnimate: ['angular'],
         angularCache: ['angular'],
-        bootstrap: ['jquery']
+        bootstrap: ['jquery'],
+        cast: {
+            exports: 'chrome.cast'
+        }
     },
     priority: ['angular']
 });
