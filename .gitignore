@@ -1,5 +1,5 @@
-/node_modules/
-/build/
-/src/bower_components/
-/src/css/
-/src/fonts/
+node_modules
+dist
+.tmp
+app/bower_components
+sender-config.json
