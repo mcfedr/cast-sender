@@ -53,23 +53,28 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout) {
         chrome.cast.initialize(apiConfig, function onInitSuccess(e) {
             console.log('init', e);
         }, function onInitError(e) {
-            console.log('init error', e);
+            console.error('init error', e);
         });
     }
 
-    $scope.doToggleCast = function () {
+    $scope.doToggleCast = function (remote) {
+        if (remote !== undefined) {
+            $scope.play.remote = !remote;
+        }
         if ($scope.play.remote === true) {
             $scope.play.remote = 'pending';
             session.stop(function onSuccess(e) {
                 console.log('stop', e);
-                $localVideo[0].currentTime = $scope.play.currentTime;
-                $localVideo[0].volume = $scope.play.volume / 100;
-                if ($scope.play.playing) {
-                    $localVideo[0].play();
+                if ($localVideo[0].src) {
+                    $localVideo[0].currentTime = $scope.play.currentTime;
+                    $localVideo[0].volume = $scope.play.volume / 100;
+                    if ($scope.play.playing) {
+                        $localVideo[0].play();
+                    }
                 }
                 $scope.play.remote = false;
             }, function onError(e) {
-                console.log('stop error', e);
+                console.error('stop error', e);
                 $scope.play.remote = true;
             });
         }
@@ -88,8 +93,12 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout) {
                     remoteLoadVideo($scope.currentVideo);
                 }
             }, function onLaunchError(e) {
-                console.log('launch error', e);
-                onMediaError(e);
+                console.error('launch error', e);
+                session = currentMedia = null;
+                $scope.$apply(function () {
+                    $scope.play.playing = false;
+                    $scope.play.remote = false;
+                });
             });
         }
     };
@@ -110,13 +119,19 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout) {
         media.metadata = new chrome.cast.media.GenericMediaMetadata();
         media.metadata.title = video.name;
         session.loadMedia(request, onMediaDiscovered.bind(this, 'loadMedia'), function (e) {
-            console.log('media error', e);
-            onMediaError(e);
+            console.error('media error', e);
+            if (e.description != 'LOAD_CANCELLED') {
+                currentMedia = null;
+                $scope.$apply(function () {
+                    $scope.play.playing = false;
+                    $scope.doToggleCast(false);
+                });
+            }
         });
     }
 
     function onMediaDiscovered(how, media) {
-        console.log('media', media);
+        console.log('media', how, media);
         currentMedia = media;
         $scope.$apply(function () {
             $scope.play.length = media.media.duration;
@@ -147,7 +162,7 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout) {
                     seekLoop = $timeout(seekUpdate, 1000);
                 }, 1000);
             }
-            else if (media.playerState == chrome.cast.media.PlayerState.IDLE) {
+            else if (media.playerState == chrome.cast.media.PlayerState.IDLE && media.currentTime == media.duration) {
                 var foundIdx;
                 $scope.videos.some(function (video, idx) {
                     if ($scope.currentVideo.src == video.src) {
@@ -168,18 +183,13 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout) {
             currentMedia.seek(seekRequest, function success(e) {
                 console.log('seek', e);
             }, function error(e) {
-                console.log('seek error', e);
-                onMediaError(e);
+                console.error('seek error', e);
+                currentMedia = null;
+                $scope.$apply(function () {
+                    $scope.play.playing = false;
+                });
             });
         }
-    }
-
-    function onMediaError() {
-        session = currentMedia = null;
-        $scope.$apply(function () {
-            $scope.play.playing = false;
-            $scope.play.remote = false;
-        });
     }
 
     $scope.doTogglePlay = function () {
@@ -191,8 +201,11 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout) {
                     currentMedia.play(null, function success(e) {
                         console.log('play', e);
                     }, function error(e) {
-                        console.log('play error', e);
-                        onMediaError(e);
+                        console.error('play error', e);
+                        currentMedia = null;
+                        $scope.$apply(function () {
+                            $scope.play.playing = false;
+                        });
                     });
                 }
             }
@@ -206,8 +219,11 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout) {
                     currentMedia.pause(null, function success(e) {
                         console.log('pause', e);
                     }, function error(e) {
-                        console.log('pause error', e);
-                        onMediaError(e);
+                        console.error('pause error', e);
+                        currentMedia = null;
+                        $scope.$apply(function () {
+                            $scope.play.playing = false;
+                        });
                     });
                 }
             }
@@ -225,8 +241,11 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout) {
                 currentMedia.seek(seekRequest, function success(e) {
                     console.log('seek', e);
                 }, function error(e) {
-                    console.log('seek error', e);
-                    onMediaError(e);
+                    console.error('seek error', e);
+                    currentMedia = null;
+                    $scope.$apply(function () {
+                        $scope.play.remote = false;
+                    });
                 });
             }
         }
@@ -241,8 +260,11 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout) {
                 currentMedia.setVolume(new chrome.cast.media.VolumeRequest(new chrome.cast.Volume($scope.play.volume / 100)), function success(e) {
                     console.log('volume', e);
                 }, function error(e) {
-                    console.log('volume error', e);
-                    onMediaError(e);
+                    console.error('volume error', e);
+                    currentMedia = null;
+                    $scope.$apply(function () {
+                        $scope.play.playing = false;
+                    });
                 });
             }
         }
