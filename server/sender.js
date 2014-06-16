@@ -12,7 +12,7 @@ var express = require("express"),
                     return file[0] != '.' && (ext == '.mp4' || ext == '.webm');
                 }).map(function(file) {
                     return {
-                        name: path.basename(file),
+                        name: path.basename(file).replace(/\./g, ' '),
                         src: 'http://' + req.headers.host + '/videos/' + file,
                         mime: path.extname(file) == '.mp4' ? 'video/mp4' : 'video/webm'
                     }

@@ -1,4 +1,5 @@
-angular.module('cast').controller('main', function ($scope, $http, $timeout) {
+/*global chrome:false */
+angular.module('cast').controller('main', function ($scope, $http, $timeout, $localStorage) {
     var $localVideo = $('#localVideo'),
         session,
         currentMedia,
@@ -19,6 +20,8 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout) {
         remoteAvailable: false
     };
     $scope.currentVideo = null;
+    $scope.$storage = $localStorage;
+    $localStorage.watched = $localStorage.watched || [];
 
     $scope.doLoadVideos = function () {
         $scope.videosLoading = true;
@@ -61,6 +64,7 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout) {
         if (remote !== undefined) {
             $scope.play.remote = !remote;
         }
+        $timeout.cancel(seekLoop);
         if ($scope.play.remote === true) {
             $scope.play.remote = 'pending';
             session.stop(function onSuccess(e) {
@@ -108,6 +112,7 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout) {
         $scope.play.currentTime = 0;
         $scope.play.playing = true;
         $localVideo[0].src = video.src;
+        $localStorage.watched[video.src] = true;
         if ($scope.play.remote === true) {
             remoteLoadVideo(video);
         }
@@ -120,7 +125,7 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout) {
         media.metadata.title = video.name;
         session.loadMedia(request, onMediaDiscovered.bind(this, 'loadMedia'), function (e) {
             console.error('media error', e);
-            if (e.description != 'LOAD_CANCELLED') {
+            if (e.description !== 'LOAD_CANCELLED') {
                 currentMedia = null;
                 $scope.$apply(function () {
                     $scope.play.playing = false;
@@ -147,32 +152,28 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout) {
         });
 
         media.addUpdateListener(function onMediaStatusUpdate(playing) {
-            console.log('status', playing, media.playerState);
+            console.log('status', playing, media.playerState, media.currentTime, media.duration);
             $scope.$apply(function () {
                 $scope.play.currentTime = media.currentTime;
                 $scope.play.volume = media.volume.level * 100;
                 $scope.play.muted = media.volume.muted;
-                $scope.play.playing = media.playerState == chrome.cast.media.PlayerState.PLAYING || media.playerState == chrome.cast.media.PlayerState.BUFFERING;
-                $scope.play.buffering = media.playerState == chrome.cast.media.PlayerState.BUFFERING;
+                $scope.play.playing = media.playerState === chrome.cast.media.PlayerState.PLAYING || media.playerState === chrome.cast.media.PlayerState.BUFFERING;
+                $scope.play.buffering = media.playerState === chrome.cast.media.PlayerState.BUFFERING;
             });
             $timeout.cancel(seekLoop);
-            if (media.playerState == chrome.cast.media.PlayerState.PLAYING) {
+            if (media.playerState === chrome.cast.media.PlayerState.PLAYING) {
                 seekLoop = $timeout(function seekUpdate() {
                     $scope.play.currentTime++;
                     seekLoop = $timeout(seekUpdate, 1000);
                 }, 1000);
             }
-            else if (media.playerState == chrome.cast.media.PlayerState.IDLE && media.currentTime == media.duration) {
-                var foundIdx;
+            else if (media.playerState === chrome.cast.media.PlayerState.IDLE && media.currentTime === media.duration) {
                 $scope.videos.some(function (video, idx) {
-                    if ($scope.currentVideo.src == video.src) {
-                        foundIdx = idx;
+                    if ($scope.currentVideo.src === video.src) {
+                        $scope.doChooseVideo($scope.videos[idx + 1]);
                         return true;
                     }
                 });
-                if (foundIdx && $scope.videos[foundIdx + 1]) {
-                    $scope.doChooseVideo($scope.videos[foundIdx + 1]);
-                }
             }
         });
 
@@ -312,12 +313,12 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout) {
         initializeCast();
     }
     else {
-        window['__onGCastApiAvailable'] = function(loaded, errorInfo) {
+        window.__onGCastApiAvailable = function(loaded, errorInfo) {
             if (loaded) {
                 initializeCast();
             } else {
                 console.log(errorInfo);
             }
-        }
+        };
     }
 });

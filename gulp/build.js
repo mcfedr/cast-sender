@@ -65,14 +65,20 @@ gulp.task('html', ['styles', 'scripts', 'partials'], function () {
         .pipe($.size());
 });
 
-gulp.task('images', function () {
-    return gulp.src('app/images/**/*')
+gulp.task('images', ['favicon'], function () {
+    return gulp.src('app/images/**')
         .pipe($.cache($.imagemin({
             optimizationLevel: 3,
             progressive: true,
             interlaced: true
         })))
         .pipe(gulp.dest('dist/images'))
+        .pipe($.size());
+});
+
+gulp.task('favicon', function () {
+    return gulp.src('app/favicon.ico')
+        .pipe(gulp.dest('dist'))
         .pipe($.size());
 });
 
