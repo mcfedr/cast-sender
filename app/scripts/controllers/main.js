@@ -20,8 +20,7 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout, $lo
         remoteAvailable: false
     };
     $scope.currentVideo = null;
-    $scope.$storage = $localStorage;
-    $localStorage.watched = $localStorage.watched || [];
+    $scope.$localStorage = $localStorage;
 
     $scope.doLoadVideos = function () {
         $scope.videosLoading = true;
@@ -112,7 +111,7 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout, $lo
         $scope.play.currentTime = 0;
         $scope.play.playing = true;
         $localVideo[0].src = video.src;
-        $localStorage.watched[video.src] = true;
+        $localStorage[video.src] = true;
         if ($scope.play.remote === true) {
             remoteLoadVideo(video);
         }

@@ -78,8 +78,9 @@
             <h1>Videos <span ng-click="doLoadVideos()" class="pull-right glyphicon glyphicon-refresh"></span></h1>
 
             <div class="list-group">
-                <a href="#" class="list-group-item" ng-class="{active: currentVideo == video, watched: $localStorage.watched[video.src]}" ng-repeat="video in videos | filter:searchText" ng-click="doChooseVideo(video)">
+                <a href="#" class="list-group-item" ng-class="{active: currentVideo == video}" ng-repeat="video in videos | filter:searchText" ng-click="doChooseVideo(video)">
                     {{ video.name }}
+                    <span class="badge" ng-show="$localStorage[video.src]">Watched</span>
                 </a>
             </div>
         </div>

@@ -52,7 +52,7 @@ gulp.task('html', ['styles', 'scripts', 'partials'], function () {
         .pipe(jsFilter)
         .pipe($.ngmin())
         .pipe($.uglify({
-            outSourceMap: gulp.dest('dist/scripts')
+            outSourceMap: true
         }))
         .pipe(jsFilter.restore())
         .pipe(cssFilter)
