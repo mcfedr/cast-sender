@@ -151,7 +151,7 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout, $lo
         });
 
         media.addUpdateListener(function onMediaStatusUpdate(playing) {
-            console.log('status', playing, media.playerState, media.currentTime, media.duration);
+            console.log('status', playing, media.playerState, media.currentTime, media.media.duration, media);
             $scope.$apply(function () {
                 $scope.play.currentTime = media.currentTime;
                 $scope.play.volume = media.volume.level * 100;
@@ -166,7 +166,7 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout, $lo
                     seekLoop = $timeout(seekUpdate, 1000);
                 }, 1000);
             }
-            else if (media.playerState === chrome.cast.media.PlayerState.IDLE && media.currentTime === media.duration) {
+            else if (media.playerState === chrome.cast.media.PlayerState.IDLE && media.idleReason == chrome.cast.media.IdleReason.FINISHED) {
                 $scope.videos.some(function (video, idx) {
                     if ($scope.currentVideo.src === video.src) {
                         $scope.doChooseVideo($scope.videos[idx + 1]);
@@ -242,10 +242,6 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout, $lo
                     console.log('seek', e);
                 }, function error(e) {
                     console.error('seek error', e);
-                    currentMedia = null;
-                    $scope.$apply(function () {
-                        $scope.play.remote = false;
-                    });
                 });
             }
         }
