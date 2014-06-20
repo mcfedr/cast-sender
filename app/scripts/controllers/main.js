@@ -151,7 +151,7 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout, $lo
         });
 
         media.addUpdateListener(function onMediaStatusUpdate(playing) {
-            console.log('status', playing, media.playerState, media.currentTime, media.media.duration, media);
+            console.log('status', playing, media.playerState, media.currentTime, media.idleReason);
             $scope.$apply(function () {
                 $scope.play.currentTime = media.currentTime;
                 $scope.play.volume = media.volume.level * 100;
@@ -166,7 +166,7 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout, $lo
                     seekLoop = $timeout(seekUpdate, 1000);
                 }, 1000);
             }
-            else if (media.playerState === chrome.cast.media.PlayerState.IDLE && media.idleReason == chrome.cast.media.IdleReason.FINISHED) {
+            else if (media.playerState === chrome.cast.media.PlayerState.IDLE && media.idleReason === chrome.cast.media.IdleReason.FINISHED) {
                 $scope.videos.some(function (video, idx) {
                     if ($scope.currentVideo.src === video.src) {
                         $scope.doChooseVideo($scope.videos[idx + 1]);
