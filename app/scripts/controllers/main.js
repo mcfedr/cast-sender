@@ -20,7 +20,9 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout, $lo
         remoteAvailable: false
     };
     $scope.currentVideo = null;
-    $scope.$localStorage = $localStorage;
+    $scope.$localStorage = $localStorage.$default({
+        autoplay: true
+    });
 
     $scope.doLoadVideos = function () {
         $scope.videosLoading = true;
@@ -166,7 +168,7 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout, $lo
                     seekLoop = $timeout(seekUpdate, 1000);
                 }, 1000);
             }
-            else if (media.playerState === chrome.cast.media.PlayerState.IDLE && media.idleReason === chrome.cast.media.IdleReason.FINISHED) {
+            else if (media.playerState === chrome.cast.media.PlayerState.IDLE && media.idleReason === chrome.cast.media.IdleReason.FINISHED && $localStorage.autoplay) {
                 $scope.videos.some(function (video, idx) {
                     if ($scope.currentVideo.src === video.src) {
                         $scope.doChooseVideo($scope.videos[idx + 1]);
