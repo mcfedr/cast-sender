@@ -343,11 +343,10 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout, $lo
             $scope.currentSubtitleIdx = subtitleIdx;
         }
         [].forEach.call($localVideo[0].textTracks, function(track, idx) {
-            track.mode = subtitleIdx == idx ? 'showing' : 'hidden';
+            track.mode = $scope.currentSubtitleIdx == idx ? 'showing' : 'hidden';
         });
         if ($scope.play.remote) {
             if (currentMedia) {
-                $scope.currentSubtitleIdx = null;
                 currentMedia.editTracksInfo(new chrome.cast.media.EditTracksInfoRequest(subtitleIdx ? [subtitleIdx + 1] : []), function success(e) {
                     console.log('tracks', e);
                 }, function error(e) {
