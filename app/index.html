@@ -46,7 +46,9 @@
             <h1>{{ currentVideo.name }}</h1>
 
             <div class="video-wrapper" ng-show="!play.remote && currentVideo">
-                <video id="localVideo"></video>
+                <video id="localVideo">
+                    <track ng-repeat="subtitle in subtitles" ng-src="{{ subtitle.src }}" label="{{ subtitle.name }}" kind="subtitles">
+                </video>
             </div>
             <div class="input-group" ng-class="{'video-active': !play.remote}">
                 <span class="input-group-btn">
@@ -58,11 +60,6 @@
                 <input type="range" class="form-control cast-position" ng-model="play.currentTime" max="{{ play.length }}" ng-change="doSeek()">
                 <span class="input-group-addon">{{ play.currentTime | mins }} / {{ play.length | mins }}</span>
                 <span class="input-group-btn">
-                    <ul class="dropdown-menu pull-right">
-                        <li>
-                            <input type="range" class="form-control cast-volume" ng-model="play.volume" max="100" ng-change="doVolume()">
-                        </li>
-                    </ul>
                     <button class="btn btn-default" ng-click="doToggleCast()" ng-if="play.remoteAvailable">
                         <span class="cast-off" ng-if="!play.remote"></span>
                         <span class="cast-pending" ng-if="play.remote == 'pending'"></span>
@@ -71,9 +68,27 @@
                     <button class="btn btn-default" ng-click="doToggleFullscreen()" ng-if="!play.remote">
                         <span class="glyphicon glyphicon-fullscreen"></span>
                     </button>
-                    <button class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-                        <span class="glyphicon glyphicon-volume-up"></span>
-                    </button>
+                    <span class="dropdown">
+                        <button class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                            <span class="glyphicon glyphicon-volume-up"></span>
+                        </button>
+                        <ul class="dropdown-menu pull-right">
+                            <li>
+                                <input type="range" class="form-control cast-volume" ng-model="play.volume" max="100" ng-change="doVolume()">
+                            </li>
+                        </ul>
+                    </span>
+                    <span class="dropdown">
+                        <button class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                            <span class="glyphicon glyphicon-subtitles"></span>
+                        </button>
+                        <ul class="dropdown-menu pull-right">
+                            <li ng-repeat="subtitle in subtitles">
+                                <a ng-click="doChooseSubtitle($index)">{{ subtitle.name }}</a>
+                                <span class="glyphicon glyphicon-pushpin" ng-if="$index == $scope.currentSubtitleIdx"></span>
+                            </li>
+                        </ul>
+                    </span>
                 </span>
             </div>
         </div>

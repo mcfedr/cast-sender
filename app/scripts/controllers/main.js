@@ -8,6 +8,7 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout, $lo
     $scope.videos = [
         {name: 'Bunny', src: 'http://video.webmfiles.org/big-buck-bunny_trailer.webm', mime: 'video/webm'}
     ];
+    $scope.subtitles = [];
     $scope.videosLoading = false;
     $scope.play = {
         playing: false,
@@ -20,6 +21,7 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout, $lo
         remoteAvailable: false
     };
     $scope.currentVideo = null;
+    $scope.currentSubtitleIdx = null;
     $scope.$localStorage = $localStorage.$default({
         autoplay: true
     });
@@ -32,6 +34,11 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout, $lo
         }).error(function () {
             console.log(arguments);
             $scope.videosLoading = false;
+        });
+        $http.get('/api/subtitles').success(function(data) {
+            $scope.subtitles = data;
+        }).error(function() {
+            console.log(arguments);
         });
     };
 
@@ -112,7 +119,17 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout, $lo
         $scope.currentVideo = video;
         $scope.play.currentTime = 0;
         $scope.play.playing = true;
+        $scope.currentSubtitleIdx = null;
+        $scope.subtitles.some(function(subtitle, idx) {
+            if (subtitle.name == video.name) {
+                $scope.currentSubtitleIdx = idx;
+                return true;
+            }
+        });
         $localVideo[0].src = video.src;
+        [].forEach.call($localVideo[0].textTracks, function(track, idx) {
+            track.mode = $scope.currentSubtitleIdx == idx ? 'showing' : 'hidden';
+        });
         $localStorage[video.src] = true;
         if ($scope.play.remote === true) {
             remoteLoadVideo(video);
@@ -121,11 +138,24 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout, $lo
 
     function remoteLoadVideo(video) {
         var media = new chrome.cast.media.MediaInfo(video.src, video.mime),
-            request = new chrome.cast.media.LoadRequest(media);
+            request = new chrome.cast.media.LoadRequest(media),
+            activeSubtitles;
         media.metadata = new chrome.cast.media.GenericMediaMetadata();
         media.metadata.title = video.name;
+        media.tracks = $scope.subtitles.map(function(subtitle, idx) {
+            var track = new chrome.cast.media.Track(idx + 1, chrome.cast.media.TrackType.TEXT);
+            track.trackContentId = subtitle.src;
+            track.contentType = subtitle.mime;
+            track.subtype = chrome.cast.media.TextTrackType.SUBTITLES;
+            track.name = subtitle.name;
+            track.language = 'en-US';
+            track.customData = null;
+            return track;
+        });
+        media.textTrackStyle = new chrome.cast.media.TextTrackStyle();
+        request.activeTrackIds = $scope.currentSubtitleIdx ? [$scope.currentSubtitleIdx + 1] : [];
         session.loadMedia(request, onMediaDiscovered.bind(this, 'loadMedia'), function (e) {
-            console.error('media error', e);
+            console.error('media error', e, media, request);
             if (e.description !== 'LOAD_CANCELLED') {
                 currentMedia = null;
                 $scope.$apply(function () {
@@ -301,6 +331,32 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout, $lo
             }
             else if ($localVideo[0].webkitRequestFullscreen) {
                 $localVideo[0].webkitRequestFullscreen();
+            }
+        }
+    };
+
+    $scope.doChooseSubtitle = function(subtitleIdx) {
+        if ($scope.currentSubtitleIdx == subtitleIdx) {
+            $scope.currentSubtitleIdx = null;
+        }
+        else {
+            $scope.currentSubtitleIdx = subtitleIdx;
+        }
+        [].forEach.call($localVideo[0].textTracks, function(track, idx) {
+            track.mode = subtitleIdx == idx ? 'showing' : 'hidden';
+        });
+        if ($scope.play.remote) {
+            if (currentMedia) {
+                $scope.currentSubtitleIdx = null;
+                currentMedia.editTracksInfo(new chrome.cast.media.EditTracksInfoRequest(subtitleIdx ? [subtitleIdx + 1] : []), function success(e) {
+                    console.log('tracks', e);
+                }, function error(e) {
+                    console.error('tracks error', e);
+                    currentMedia = null;
+                    $scope.$apply(function () {
+                        $scope.play.playing = false;
+                    });
+                });
             }
         }
     };
