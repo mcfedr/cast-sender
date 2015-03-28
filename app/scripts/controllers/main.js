@@ -130,7 +130,6 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout, $lo
         [].forEach.call($localVideo[0].textTracks, function(track, idx) {
             track.mode = $scope.currentSubtitleIdx == idx ? 'showing' : 'hidden';
         });
-        $localStorage[video.src] = true;
         if ($scope.play.remote === true) {
             remoteLoadVideo(video);
         }
@@ -195,6 +194,11 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout, $lo
             if (media.playerState === chrome.cast.media.PlayerState.PLAYING) {
                 seekLoop = $timeout(function seekUpdate() {
                     $scope.play.currentTime++;
+
+                    if ($scope.play.currentTime > 120) {
+                        $localStorage[$scope.currentVideo.src] = true;
+                    }
+
                     seekLoop = $timeout(seekUpdate, 1000);
                 }, 1000);
             }
