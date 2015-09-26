@@ -1,12 +1,14 @@
-var config;
+var config,
+    path = require('path'),
+    os = require('os');
 
 try {
-    config = require(process.env['HOME'] + '/.sender.json');
+    config = require(path.join(os.homedir(), '.sender.json'));
 } catch(e) {
     console.log('No config file found');
     config = {
-        "videosDir": "/Users/mcfedr/TV",
-        "port": 5000
+        videosDir: path.join(os.homedir(), 'TV'),
+        port: 5000
     };
 }
 

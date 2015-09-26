@@ -2,10 +2,7 @@
   "name": "cast-sender",
   "version": "0.0.1",
   "description": "The Cast Sender webapp",
-  "main": "index.js",
-  "directories": {
-    "test": "test"
-  },
+  "bin": "./main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -42,6 +39,10 @@
     "type": "git",
     "url": "git://github.com/mcfedr/cast-sender.git"
   },
+  "bugs": {
+    "url": "https://github.com/mcfedr/cast-sender/issues"
+  },
+  "homepage": "https://github.com/mcfedr/cast-sender",
   "engines": {
     "node": ">=0.10.0"
   }
