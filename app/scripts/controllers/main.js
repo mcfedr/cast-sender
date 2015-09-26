@@ -1,5 +1,5 @@
 /*global chrome:false */
-angular.module('cast').controller('main', function ($scope, $http, $timeout, $localStorage) {
+angular.module('cast').controller('main', function ($scope, $http, $timeout, $localStorage, $window) {
     var $localVideo = $('#localVideo'),
         session,
         currentMedia,
@@ -32,7 +32,7 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout, $lo
             $scope.videos = data;
             $scope.videosLoading = false;
             if (!$scope.videos.some(function(video) {
-                    return video.src == $scope.currentVideo.src;
+                    return video.src === $scope.currentVideo.src;
                 })) {
                 $scope.doChooseVideo(null);
             }
@@ -127,7 +127,7 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout, $lo
             $scope.play.playing = true;
             $scope.currentSubtitleIdx = null;
             if (!$scope.subtitles.some(function (subtitle, idx) {
-                if (subtitle.name == video.name) {
+                if (subtitle.name === video.name) {
                     $scope.currentSubtitleIdx = idx;
                     return true;
                 }
@@ -145,7 +145,7 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout, $lo
             $localVideo[0].src = null;
             if ($scope.play.remote === true) {
                 $scope.play.remote = 'pending';
-                session.stop(function() {
+                session.stop(function(e) {
                     console.log('stop', e);
                     $scope.play.remote = false;
                 }, function onError(e) {
@@ -155,14 +155,13 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout, $lo
             }
         }
         [].forEach.call($localVideo[0].textTracks, function (track, idx) {
-            track.mode = $scope.currentSubtitleIdx == idx ? 'showing' : 'hidden';
+            track.mode = $scope.currentSubtitleIdx === idx ? 'showing' : 'hidden';
         });
     };
 
     function remoteLoadVideo(video) {
         var media = new chrome.cast.media.MediaInfo(video.src, video.mime),
-            request = new chrome.cast.media.LoadRequest(media),
-            activeSubtitles;
+            request = new chrome.cast.media.LoadRequest(media);
         media.metadata = new chrome.cast.media.GenericMediaMetadata();
         media.metadata.title = video.name;
         media.tracks = $scope.subtitles.map(function(subtitle, idx) {
@@ -364,14 +363,14 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout, $lo
     };
 
     $scope.doChooseSubtitle = function(subtitleIdx) {
-        if ($scope.currentSubtitleIdx == subtitleIdx) {
+        if ($scope.currentSubtitleIdx === subtitleIdx) {
             $scope.currentSubtitleIdx = null;
         }
         else {
             $scope.currentSubtitleIdx = subtitleIdx;
         }
         [].forEach.call($localVideo[0].textTracks, function(track, idx) {
-            track.mode = $scope.currentSubtitleIdx == idx ? 'showing' : 'hidden';
+            track.mode = $scope.currentSubtitleIdx === idx ? 'showing' : 'hidden';
         });
         if ($scope.play.remote) {
             if (currentMedia) {
@@ -389,13 +388,13 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout, $lo
     };
 
     $scope.doDeleteVideo = function(video) {
-        if (confirm('Are you sure you want to delete ' + video.name + '?')) {
+        if ($window.confirm('Are you sure you want to delete ' + video.name + '?')) {
             $http.delete(video.src).then(function () {
                 $scope.videos = $scope.videos.filter(function (v) {
-                    return v.src != video.src;
+                    return v.src !== video.src;
                 });
                 if (!$scope.videos.some(function(video) {
-                        return video.src == $scope.currentVideo.src;
+                        return video.src === $scope.currentVideo.src;
                     })) {
                     $scope.doChooseVideo(null);
                 }
