@@ -6,8 +6,7 @@
     <string>co.fedr.castsender</string>
     <key>ProgramArguments</key>
     <array>
-        <string>/usr/local/bin/node</string>
-        <string>/Users/mcfedr/dev/cast/sender/sender.js</string>
+        <string>/usr/local/bin/cast-sender</string>
     </array>
     <key>StandardOutPath</key>
     <string>/Users/mcfedr/Library/Logs/castsender.log</string>
