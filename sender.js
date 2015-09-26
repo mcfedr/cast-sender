@@ -1,7 +1,8 @@
+#!/usr/local/bin/node
 var express = require("express"),
     morgan  = require('morgan'),
-    sender = require('./server/sender.js'),
-    config = require('./sender-config.json'),
+    sender = require('./server/sender'),
+    config = require('./server/config');
 
     app = express()
         .use(morgan('dev'))

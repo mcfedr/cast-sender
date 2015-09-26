@@ -2,4 +2,3 @@ node_modules
 dist
 .tmp
 app/bower_components
-sender-config.json

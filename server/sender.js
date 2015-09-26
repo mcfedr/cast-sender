@@ -2,8 +2,9 @@ var express = require("express"),
     fs = require('fs'),
     path = require('path'),
     cors = require('cors'),
-    config = require('../sender-config.json'),
-    listFile = function(exts, host, cb) {
+    config = require('./config');
+
+var listFile = function(exts, host, cb) {
         fs.readdir(config.videosDir, function(err, files) {
             cb(files.filter(function (file) {
                 var fileExt = path.extname(file);
