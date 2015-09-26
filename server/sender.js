@@ -32,5 +32,22 @@ var express = require("express"),
             listFile({'.vtt': 'text/vtt'}, req.headers.host, function(obj) {
                 res.json(obj);
             });
-        });
+        })
+        .delete('/videos/:fileName', function(req, res) {
+            var file = path.join(config.videosDir, req.params.fileName);
+            fs.exists(file, function(exists) {
+                if (exists) {
+                    fs.unlink(file, function(err) {
+                        if (err) {
+                            res.status(500).json(err);
+                        } else {
+                            res.send('removed');
+                        }
+                    })
+                } else {
+                    res.status(404).send('not found');
+                }
+            });
+        })
+    ;
 module.exports = app;

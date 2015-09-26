@@ -32,10 +32,6 @@ gulp.task('connect:dist', function () {
     });
 });
 
-gulp.task('serve', ['connect:src', 'styles'], function () {
-  require('opn')('http://localhost:9000');
-});
+gulp.task('serve', ['connect:src', 'styles']);
 
-gulp.task('serve:dist', ['connect:dist'], function () {
-    require('opn')('http://localhost:9000');
-});
+gulp.task('serve:dist', ['connect:dist']);

@@ -1,5 +1,5 @@
 var express = require("express"),
-    morgan  = require('morgan')
+    morgan  = require('morgan'),
     sender = require('./server/sender.js'),
     config = require('./sender-config.json'),
 
