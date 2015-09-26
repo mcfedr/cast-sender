@@ -31,6 +31,11 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout, $lo
         $http.get('/api/videos').success(function (data) {
             $scope.videos = data;
             $scope.videosLoading = false;
+            if (!$scope.videos.some(function(video) {
+                    return video.src == $scope.currentVideo.src;
+                })) {
+                $scope.doChooseVideo(null);
+            }
         }).error(function () {
             console.log(arguments);
             $scope.videosLoading = false;
@@ -118,21 +123,40 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout, $lo
     $scope.doChooseVideo = function (video) {
         $scope.currentVideo = video;
         $scope.play.currentTime = 0;
-        $scope.play.playing = true;
-        $scope.currentSubtitleIdx = null;
-        $scope.subtitles.some(function(subtitle, idx) {
-            if (subtitle.name == video.name) {
-                $scope.currentSubtitleIdx = idx;
-                return true;
+        if (video) {
+            $scope.play.playing = true;
+            $scope.currentSubtitleIdx = null;
+            if (!$scope.subtitles.some(function (subtitle, idx) {
+                if (subtitle.name == video.name) {
+                    $scope.currentSubtitleIdx = idx;
+                    return true;
+                }
+            })) {
+                $scope.currentSubtitleIdx = null;
             }
-        });
-        $localVideo[0].src = video.src;
-        [].forEach.call($localVideo[0].textTracks, function(track, idx) {
+            $localVideo[0].src = video.src;
+            if ($scope.play.remote === true) {
+                remoteLoadVideo(video);
+            }
+        }
+        else {
+            $scope.play.playing = false;
+            $scope.currentSubtitleIdx = null;
+            $localVideo[0].src = null;
+            if ($scope.play.remote === true) {
+                $scope.play.remote = 'pending';
+                session.stop(function() {
+                    console.log('stop', e);
+                    $scope.play.remote = false;
+                }, function onError(e) {
+                    console.error('stop error', e);
+                    $scope.play.remote = true;
+                });
+            }
+        }
+        [].forEach.call($localVideo[0].textTracks, function (track, idx) {
             track.mode = $scope.currentSubtitleIdx == idx ? 'showing' : 'hidden';
         });
-        if ($scope.play.remote === true) {
-            remoteLoadVideo(video);
-        }
     };
 
     function remoteLoadVideo(video) {
@@ -361,6 +385,21 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout, $lo
                     });
                 });
             }
+        }
+    };
+
+    $scope.doDeleteVideo = function(video) {
+        if (confirm('Are you sure you want to delete ' + video.name + '?')) {
+            $http.delete(video.src).then(function () {
+                $scope.videos = $scope.videos.filter(function (v) {
+                    return v.src != video.src;
+                });
+                if (!$scope.videos.some(function(video) {
+                        return video.src == $scope.currentVideo.src;
+                    })) {
+                    $scope.doChooseVideo(null);
+                }
+            });
         }
     };
 

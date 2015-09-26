@@ -98,6 +98,7 @@
                 <a href="#" class="list-group-item" ng-class="{active: currentVideo.src == video.src}" ng-repeat="video in videos | filter:searchText" ng-click="doChooseVideo(video)">
                     {{ video.name }}
                     <span class="badge" ng-show="$localStorage[video.src]">Watched</span>
+                    <button class="btn btn-danger btn-xs pull-right" ng-click="doDeleteVideo(video); $event.stopPropagation()">Delete</button>
                 </a>
             </div>
         </div>
