@@ -3,7 +3,9 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout, $lo
     var $localVideo = $('#localVideo'),
         session,
         currentMedia,
-        seekLoop;
+        seekLoop,
+        seekLoopSyncTime,
+        seekLoopSyncOffset;
 
     $scope.videos = [
         {name: 'Bunny', src: 'http://video.webmfiles.org/big-buck-bunny_trailer.webm', mime: 'video/webm'}
@@ -31,7 +33,7 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout, $lo
         $http.get('/api/videos').success(function (data) {
             $scope.videos = data;
             $scope.videosLoading = false;
-            if (!$scope.videos.some(function(video) {
+            if ($scope.currentVideo && !$scope.videos.some(function(video) {
                     return video.src === $scope.currentVideo.src;
                 })) {
                 $scope.doChooseVideo(null);
@@ -213,10 +215,12 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout, $lo
                 $scope.play.playing = media.playerState === chrome.cast.media.PlayerState.PLAYING || media.playerState === chrome.cast.media.PlayerState.BUFFERING;
                 $scope.play.buffering = media.playerState === chrome.cast.media.PlayerState.BUFFERING;
             });
+            seekLoopSyncTime = new Date().getTime();
+            seekLoopSyncOffset = media.currentTime;
             $timeout.cancel(seekLoop);
             if (media.playerState === chrome.cast.media.PlayerState.PLAYING) {
                 seekLoop = $timeout(function seekUpdate() {
-                    $scope.play.currentTime++;
+                    $scope.play.currentTime = seekLoopSyncOffset + ((new Date().getTime() - seekLoopSyncTime) / 1000);
 
                     if ($scope.play.currentTime > 120) {
                         $localStorage[$scope.currentVideo.src] = true;
