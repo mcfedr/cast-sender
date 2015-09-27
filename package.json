@@ -5,7 +5,7 @@
   "bin": "./main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "install": "bower install --allow-root && gulp"
+    "install": "HOME=/tmp CI=true bower install && gulp"
   },
   "author": "Fred Cox <mcfedr@gmail.com>",
   "license": "MIT",
