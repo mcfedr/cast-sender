@@ -1,4 +1,4 @@
-#!/usr/local/bin/node
+#!/usr/bin/env node
 var express = require("express"),
     morgan  = require('morgan'),
     sender = require('./server/sender'),
