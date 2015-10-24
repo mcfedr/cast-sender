@@ -3,20 +3,11 @@ var bluebird = require('bluebird'),
     fs = bluebird.promisifyAll(require('fs')),
     path = require('path'),
     cors = require('cors'),
+    mime = require('mime'),
     config = require('./config');
 
-function filterExts(exts) {
-    return function (file) {
-        var fileExt = path.extname(file);
-        return file[0] != '.' && Object.keys(exts).some(function(ext) {
-            return fileExt == ext;
-        });
-    };
-}
-
-function listFile(exts, host, subPath) {
-    var filter = filterExts(exts),
-        listDir = path.join(config.videosDir, subPath || '.');
+function listFile(host, subPath) {
+    var listDir = path.join(config.videosDir, subPath || '.');
 
     return fs.readdirAsync(listDir)
         .then(function(files) {
@@ -29,27 +20,25 @@ function listFile(exts, host, subPath) {
             return fileAndStats
                 .filter(function(fileAndStat) {
                     var file = fileAndStat[0],
-                        stat = fileAndStat[1];
-                    return stat.isDirectory() || filter(file);
+                        stat = fileAndStat[1],
+                        mime = mime.lookup(file);
+                    return stat.isDirectory() || ['video/mp4', 'video/webm', 'text/vtt'].indexOf(mime) != -1;
                 })
                 .map(function (fileAndStat) {
                     var file = fileAndStat[0],
                         stat = fileAndStat[1],
-                        fileExt = path.extname(file);
-                    if (stat.isDirectory()) {
-                        return {
+                        obj = {
                             name: path.basename(file, fileExt).replace(/\./g, ' '),
-                            path: path.dirname(path.relative(config.videosDir, file)),
-                            type: 'dir'
-                        }
+                            path: path.dirname(path.relative(config.videosDir, file))
+                        };
+                    if (stat.isDirectory()) {
+                        obj.mime = 'dir';
                     }
-                    return {
-                        name: path.basename(file, fileExt).replace(/\./g, ' '),
-                        path: path.dirname(path.relative(config.videosDir, file)),
-                        src: 'http://' + host + '/videos/' + path.relative(config.videosDir, file),
-                        mime: exts[fileExt],
-                        type: 'file'
-                    };
+                    else {
+                        obj.mime = mime.lookup(file);
+                        obj.src = 'http://' + host + '/videos/' + path.relative(config.videosDir, file);
+                    }
+                    return obj;
                 })
         });
 }
@@ -58,25 +47,16 @@ var app = express()
         .use(cors())
         .options('*', cors())
         .use('/videos', express.static(config.videosDir))
-        .get(/api\/videos(\/.+)?/, function(req, res) {
+        .get(/api\/files(\/.+)?/, function(req, res) {
             console.log(req.path, req.params[0]);
-            listFile({'.mp4': 'video/mp4', '.webm': 'video/webm'}, req.headers.host, req.params[0]).then(function(obj) {
+            listFile(req.headers.host, req.params[0]).then(function(obj) {
                 res.json({videos: obj});
             }).catch(function(err) {
                 console.error(err);
                 res.status(500).end();
             });
         })
-        .get(/api\/subtitles(\/.+)?/, function(req, res) {
-            console.log(req.path, req.params[0]);
-            listFile({'.vtt': 'text/vtt'}, req.headers.host, req.params[0]).then(function(obj) {
-                res.json({subtitles: obj});
-            }).catch(function(err) {
-                console.error(err);
-                res.status(500).end();
-            });
-        })
-        .delete(/api\/videos(\/.+)?/, function(req, res) {
+        .delete(/api\/files(\/.+)?/, function(req, res) {
             console.log(req.path, req.params[0]);
             var file = path.join(config.videosDir, req.params[0]);
             fs.exists(file, function(exists) {
