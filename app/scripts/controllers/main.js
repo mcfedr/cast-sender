@@ -30,8 +30,15 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout, $lo
 
     $scope.doLoadVideos = function () {
         $scope.videosLoading = true;
-        $http.get('/api/videos').success(function (data) {
-            $scope.videos = data;
+        $http.get('/api/files').success(function (data) {
+            $scope.videos = data.files.filter(function(file) {
+                return file.mime.match(/^video\//);
+            }).sort(function(a, b) {
+                return a.path.localeCompare(b.path);
+            });
+            $scope.subtitles = data.files.filter(function(file) {
+                return file.mime.match(/^text\//);
+            });
             $scope.videosLoading = false;
             if ($scope.currentVideo && !$scope.videos.some(function(video) {
                     return video.src === $scope.currentVideo.src;
@@ -41,11 +48,6 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout, $lo
         }).error(function () {
             console.log(arguments);
             $scope.videosLoading = false;
-        });
-        $http.get('/api/subtitles').success(function(data) {
-            $scope.subtitles = data;
-        }).error(function() {
-            console.log(arguments);
         });
     };
 
