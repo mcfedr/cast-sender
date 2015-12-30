@@ -21,14 +21,14 @@ function listFile(host, subPath) {
                 .filter(function(fileAndStat) {
                     var file = fileAndStat[0],
                         stat = fileAndStat[1],
-                        mime = mime.lookup(file);
-                    return stat.isDirectory() || ['video/mp4', 'video/webm', 'text/vtt'].indexOf(mime) != -1;
+                        fileMime = mime.lookup(file);
+                    return stat.isDirectory() || ['video/mp4', 'video/webm', 'text/vtt'].indexOf(fileMime) != -1;
                 })
                 .map(function (fileAndStat) {
                     var file = fileAndStat[0],
                         stat = fileAndStat[1],
                         obj = {
-                            name: path.basename(file, fileExt).replace(/\./g, ' '),
+                            name: path.basename(file, path.extname(file)).replace(/\./g, ' '),
                             path: path.dirname(path.relative(config.videosDir, file))
                         };
                     if (stat.isDirectory()) {
