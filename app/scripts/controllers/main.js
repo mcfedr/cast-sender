@@ -1,5 +1,5 @@
 /*global chrome:false */
-angular.module('cast').controller('main', function ($scope, $http, $timeout, $localStorage, $window) {
+angular.module('cast').controller('main', function ($scope, $http, $timeout, $localStorage, $window, hotkeys) {
     var $localVideo = $('#localVideo'),
         session,
         currentMedia,
@@ -421,4 +421,13 @@ angular.module('cast').controller('main', function ($scope, $http, $timeout, $lo
             }
         };
     }
+
+    hotkeys.bindTo($scope).add({
+        combo: 'space',
+        description: 'Play/Pause',
+        callback: function(event) {
+            event.preventDefault();
+            $scope.doTogglePlay();
+        }
+    });
 });
